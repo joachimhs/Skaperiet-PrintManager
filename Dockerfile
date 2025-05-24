@@ -1,61 +1,55 @@
-# Use the official Node.js 20 image as the base image for development
-FROM --platform=linux/amd64 node:20-slim AS development
+# ─────────────────────────────────────────────────────────────
+# 1) Install deps & build (has devDependencies, your full source)
+# ─────────────────────────────────────────────────────────────
+FROM node:20-slim AS builder
 
-ENV DEBIAN_FRONTEND=noninteractive
-
-# Install necessary dependencies
 RUN apt-get update && apt-get install -y prusa-slicer curl \
   --no-install-recommends \
   && rm -rf /var/lib/apt/lists/* \
   && apt-get autoremove -y \
   && apt-get autoclean
 
-# Create the /app directory
-RUN mkdir /app
-
-# Set the working directory to /app
 WORKDIR /app
 
-# Install dependencies first (separate layer for better caching)
-COPY package.json  ./
+# 1a) Copy only the package manifests & lockfile first
+#     → enables docker layer caching when deps haven’t changed
+COPY package.json package-lock.json svelte.config.js tsconfig.json ./
+# If you have vite.config.js or other root files, copy them here too:
+COPY vite.config.js ./
 
-RUN npm install
+# 1b) Install ALL dependencies (including devDependencies)
+RUN npm ci
 
-# Copy the rest of the application code
-COPY . .
+# 1c) Copy the rest of your source
+COPY src ./src
+# If you have any static or public folder, copy it:
+COPY static ./static
 
-# Build the application (e.g., for a React app, it might be `npm run build`)
-# This assumes you have a build script in your package.json that produces a 'build' directory
-RUN npm run build
+# 1d) Run the SvelteKit build
+RUN npm run build        # this usually calls `svelte-kit build`
 
-# Install `nodemon` globally for hot-reloading
-RUN npm install -g nodemon
-
-# Expose the port the app runs on
-EXPOSE 3000
-
-# Command to run the application with hot-reloading
-CMD ["nodemon", "-L", "--watch", "src", "--exec", "npm run dev"]
-
-# Use a new stage for the production image
-FROM node:20-slim AS production
-
-# Set the working directory inside the container
+# ─────────────────────────────────────────────────────────────
+# 2) Production image (only prod deps + built output)
+# ─────────────────────────────────────────────────────────────
+FROM node:20-slim AS runner
 WORKDIR /app
 
-# Set environment variables
-ENV BODY_SIZE_LIMIT=15000000
+# Tell npm to omit devDeps
+ENV NODE_ENV=production
 
-# Copy the built application from the development stage
-COPY --from=development /app/package.json /app/package.json
+# 2a) Copy only the package manifests & lockfile for prod-only install
+COPY package.json package-lock.json ./
 
-# Install only production dependencies
-#RUN npm install --only=production
-RUN npm install
-RUN npm run build
+# 2b) Install production dependencies
+RUN npm ci --omit=dev
 
-# Expose the port the app runs on
+# 2c) Copy the built output from the builder stage
+COPY --from=builder /app/build   ./build
+# If you have a `static` folder that needs to be served, copy that too
+COPY --from=builder /app/static  ./static
+
+# 2d) Expose the port (if you’re using adapter-node, default is 3000)
 EXPOSE 3000
 
-# Command to start the SvelteKit app using Node.js
-CMD ["node", "/app/build"]
+# 2e) Launch the built SvelteKit/Node server
+CMD ["node", "build/index.js"]
