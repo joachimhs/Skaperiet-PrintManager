@@ -4,17 +4,19 @@ services:
   skaperiet-printmanager:
     build:
       context: .
-      target: development
+      target: production
     container_name: skaperiet-printmanager
     env_file:
       - .env
     ports:
       - "5010:5173"
+      - "3000:3000"
       - "9229:9229"
     volumes:
       - ./profiles:/app/profiles
       - ./uploads:/app/uploads
-      - .:/app
+      - .:/app                # Mount the app directory
+      - /app/node_modules      # Mask node_modules to keep dependencies
     environment:
       - .env
       - NODE_ENV=development

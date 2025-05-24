@@ -10,4 +10,12 @@ export interface Printer {
     };
     state: PrinterState;
     error?: string;
+    printStatus?: {
+        progress: number;
+        message: string;
+        printDuration: number;
+        totalDuration: number;
+        filamentUsed: number;
+        filename: string;
+    };
 }

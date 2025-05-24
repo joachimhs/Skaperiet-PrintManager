@@ -223,6 +223,23 @@
             {/if}
 
             <div style="margin-top: 10px; color: green;">{message}</div>
+        {:else if printer.state.text === 'Printing'}
+            <div>
+                <h3 class="printer-box-red">Utskrift på vei :)</h3>
+                <div class="printer-info-grid">
+                    <div class="printer-info-grid-left">Filen som printes:</div>
+                    <div class="printer-info-grid-right">{printer.printStatus? printer.printStatus.filename : '...'}</div>
+
+                    <div class="printer-info-grid-left">Fremdrift:</div>
+                    <div class="printer-info-grid-right">{printer.printStatus ? Math.floor(printer.printStatus.progress * 100) : '...'}%</div>
+
+                    <div class="printer-info-grid-left">Tid benyttet:</div>
+                    <div class="printer-info-grid-right">{printer.printStatus ? Math.ceil(printer.printStatus.printDuration / 60)  : '...'} minutter</div>
+
+                    <div class="printer-info-grid-left">Tid igjen:</div>
+                    <div class="printer-info-grid-right">{printer.printStatus ? Math.ceil(((printer.printStatus.printDuration / printer.printStatus.progress) - printer.printStatus.printDuration) / 60) : '...'} minutter</div>
+                </div>
+            </div>
         {:else}
             <div>
                 <h3 class="printer-box-red">Printer er ikke operativ</h3>
@@ -321,12 +338,17 @@
     }
 
     .printer-box-green h3 {
-        background-color: #43b043;
+        background-color: #2c772d;
         color: #fff;
     }
 
     .printer-box-red h3 {
         background-color: #b05555;
+        color: #fff;
+    }
+
+    h3.printer-box-yellow {
+        background-color: #85843b;
         color: #fff;
     }
 
@@ -409,7 +431,7 @@
     }
 
     .badge-operational {
-        background-color: #43b043;
+        background-color: #2c772d;
     }
 
     .badge-non-operational {

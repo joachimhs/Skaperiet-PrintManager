@@ -1,7 +1,6 @@
-# Use an official Node.js image as the base
-FROM node:20-slim AS base
+# Use the official Node.js 20 image as the base image for development
+FROM --platform=linux/amd64 node:20-slim AS development
 
-# Set non-interactive mode for the installation of packages
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Install necessary dependencies
@@ -17,42 +16,45 @@ RUN mkdir /app
 # Set the working directory to /app
 WORKDIR /app
 
-# Copy package.json and package-lock.json
-COPY package.json ./
+# Install dependencies first (separate layer for better caching)
+COPY package.json  ./
+
+RUN npm install
 
 # Copy the rest of the application code
 COPY . .
 
-# Install dependencies using npm i to ensure clean installation
-RUN npm install
-
-EXPOSE 5173 5010
-# ===============================
-# Development Stage
-# ===============================
-FROM base AS development
-
-ENV PATH /app/node_modules/.bin:$PATH
+# Build the application (e.g., for a React app, it might be `npm run build`)
+# This assumes you have a build script in your package.json that produces a 'build' directory
+RUN npm run build
 
 # Install `nodemon` globally for hot-reloading
 RUN npm install -g nodemon
 
-# Expose the port the app runs on and for the Node.js inspector
-EXPOSE 5173 5010
+# Expose the port the app runs on
+EXPOSE 3000
 
-# Start the app using nodemon for auto-reloading on changes
-CMD ["npx", "nodemon", "-L", "--watch", "src", "--exec", "npm run dev"]
+# Command to run the application with hot-reloading
+CMD ["nodemon", "-L", "--watch", "src", "--exec", "npm run dev"]
 
-# ===============================
-# Production Stage
-# ===============================
-FROM base AS production
+# Use a new stage for the production image
+FROM node:20-slim AS production
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Set environment variables
+ENV BODY_SIZE_LIMIT=15000000
+
+# Copy the built application from the development stage
+COPY --from=development /app/package.json /app/package.json
+
+# Install only production dependencies
+RUN npm install --only=production
+RUN npm run build
 
 # Expose the port the app runs on
 EXPOSE 3000
 
-# Build the application
-RUN npm run build
-
-# Start the app using the built files
-CMD ["npm", "preview", "--host", "0.0.0.0", "--port", "3000"]
+# Command to start the SvelteKit app using Node.js
+CMD ["node", "/app/build"]

@@ -23,7 +23,8 @@
 		"@rollup/plugin-node-resolve": "^15.2.3",
 		"formidable": "^3.5.1",
 		"rollup-plugin-polyfill-node": "^0.13.0",
-		"three": "^0.167.1"
+		"three": "^0.167.1",
+		"file-saver": "^2.0.5"
 	},
 	"type": "module"
 }

@@ -22,7 +22,8 @@ export const GET: RequestHandler = async ({ url }) => {
     }
 
     console.log(printerIP);
-
+//http://192.168.68.56/printer/objects/query?print_stats&display_status
+    //{"result": {"status": {"display_status": {"progress": 0.58, "message": "Printing"}, "print_stats": {"print_duration": 414.4374220309546, "total_duration": 495.7425204030005, "filament_used": 570.6191100000178, "filename": "Skilt_spacer.gcode", "state": "printing", "message": ""}}, "eventtime": 604341.591811255}}
     try {
         const response = await fetch(`${printerIP}/api/printer`);
         const data = await response.json();

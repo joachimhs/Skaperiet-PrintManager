@@ -31,6 +31,16 @@ function generatePrinterProfiles() {
             filename: "profile4.ini",
             description: "15% infill, med supports og brim, normal hastighet",
             longDescription: "Profil 4: For figurer som trenger både 'brim' og 'support'"
+        },
+        {
+            filename: "profile5.ini",
+            description: "5% infill, rask",
+            longDescription: "Profil 5: For Store figurer som ikke trenger så mye infill. Raskere utskrift.'"
+        },
+        {
+            filename: "profile6.ini",
+            description: "3% infill, rask",
+            longDescription: "Profil 5: For Store figurer som ikke trenger så mye infill. Raskere utskrift.'"
         }
     ]);
 }
@@ -52,6 +62,7 @@ export async function updatePrinters() {
             if (currentPrinter) {
                 currentPrinter.temperature = printer.temperature;
                 currentPrinter.state = printer.state;
+                currentPrinter.printStatus = printer.printStatus;
             }
 
             console.log('updates printer', currentPrinters);
