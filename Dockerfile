@@ -50,7 +50,8 @@ ENV BODY_SIZE_LIMIT=15000000
 COPY --from=development /app/package.json /app/package.json
 
 # Install only production dependencies
-RUN npm install --only=production
+#RUN npm install --only=production
+RUN npm install
 RUN npm run build
 
 # Expose the port the app runs on
