@@ -15,7 +15,7 @@ WORKDIR /app
 #     → enables docker layer caching when deps haven’t changed
 COPY package.json package-lock.json svelte.config.js tsconfig.json ./
 # If you have vite.config.js or other root files, copy them here too:
-COPY vite.config.js ./
+COPY vite.config.ts ./
 
 # 1b) Install ALL dependencies (including devDependencies)
 RUN npm ci
